@@ -6,16 +6,16 @@ from pushover import Pushover as pusho
 import pickle
 import validators
 
+from sql import SqlConnect
 from dotenv import load_dotenv
 import pulse_util as util
 import pulse as pul
 
     
 class ForbiddenPlanet:
-    
-    
     def __init__(self, get_live_sitemap = True, verbose = False):
-        
+
+        self.db = SqlConnect()
         self.sitemap_home = 'https://forbiddenplanet.com/sitemap.xml'
         self.webpage_home = 'https://forbiddenplanet.com'
         self.verbose = verbose
@@ -106,21 +106,23 @@ class ForbiddenPlanet:
 
     def format_watchlist_notification(self, comics: dict) -> str:
 
+        self.db.cur.execute("""SELECT series, name, issue, cover, url FROM fp_watchlist WHERE status=TRUE;""")
+        watchlist_comics = self.db.cur.fetchall()
+        comic_names = [' '.join([str(value) for value in comic[:4] if value]) for comic in watchlist_comics]
+        comic_urls = [value[-1] for value in watchlist_comics]
         message = self.initiate_message()
 
-        for comic_dict in list(comics.values()):
-            for comic_title in comic_dict.items():
-
-                stock = self.get_stock_count(comic_title[-1])
-                tiny_url = util.make_tiny(comic_title[-1])
-                if stock > 0:
-                    message.append(
-                        f"<font color='orange'>{comic_title[0]}</font> \n Currently <font color='green'>IN</font> stock! :) with a Qty: <b>{stock}</b> \n <a href='{tiny_url}'>Buy now!</a>")
-                    self.message_line(message, line_type='comic_seperator')
-                else:
-                    message.append(
-                        f"<font color='orange'>{comic_title[0]}</font> \n Currently <font color='red'>NOT</font> in stock! :( ")
-                    self.message_line(message, line_type='comic_seperator')
+        for entry in range(len(watchlist_comics)):
+            stock = self.get_stock_count(comic_urls[entry])
+            tiny_url = util.make_tiny(comic_urls[entry])
+            if stock > 0:
+                message.append(
+                    f"<font color='orange'>{comic_names[entry]}</font> \n Currently <font color='green'>IN</font> stock! :) with a Qty: <b>{stock}</b> \n <a href='{tiny_url}'>Buy now!</a>")
+                self.message_line(message, line_type='comic_seperator')
+            else:
+                message.append(
+                    f"<font color='orange'>{comic_names[entry]}</font> \n Currently <font color='red'>NOT</font> in stock! :( ")
+                self.message_line(message, line_type='comic_seperator')
 
         message = '\n'.join(message)
         return message

@@ -1,14 +1,12 @@
-from fpcomics import Notify
+from comics import ForbiddenPlanet
 
-def main(mode='stocklist'):
+def main(mode='watchlist'):
 
-
-
-    if mode = 'stock_update':
-        Notify(get_live_sitemap = True)
+    if mode == 'stock_update':
+        ForbiddenPlanet(get_live_sitemap = True)
 
     else:
-        push = Notify(get_live_sitemap = False)
+        push = ForbiddenPlanet(get_live_sitemap = False)
         if mode=='watchlist':
             push.run_watchlist_notification()
         
