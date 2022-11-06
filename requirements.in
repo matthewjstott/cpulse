@@ -1,6 +1,6 @@
 beautifulsoup4
+psycopg2-binary
 git+https://github.com/Wyattjoh/pushover
 python-dotenv
 requests
 validators
-psycopg2
