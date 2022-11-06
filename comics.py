@@ -8,6 +8,7 @@ import validators
 
 from dotenv import load_dotenv
 import pulse_util as util
+import pulse as pul
 
     
 class ForbiddenPlanet:
@@ -25,6 +26,7 @@ class ForbiddenPlanet:
         else:
             self.products = self.load_current_stock()
 
+        self.pulse = pul.Pulse()
     
     def get_max_product_pages(self):
 
@@ -110,7 +112,7 @@ class ForbiddenPlanet:
             for comic_title in comic_dict.items():
 
                 stock = self.get_stock_count(comic_title[-1])
-                tiny_url = self.make_tiny(comic_title[-1])
+                tiny_url = util.make_tiny(comic_title[-1])
                 if stock > 0:
                     message.append(
                         f"<font color='orange'>{comic_title[0]}</font> \n Currently <font color='green'>IN</font> stock! :) with a Qty: <b>{stock}</b> \n <a href='{tiny_url}'>Buy now!</a>")
@@ -230,9 +232,29 @@ class ForbiddenPlanet:
         updated_comics = util.merge_dict_objects(current_comics, comic_dict)
         util.save_to_json(updated_comics, list_type=comic_list)
 
+    def initiate_message(self):
 
+        message = []
+        self.message_line(message, line_type='message_header')
+        message.append(f'<b>{datetime.datetime.now().strftime("%d-%B-%Y %H:%M:%S")}</b>')
+        self.message_line(message, line_type='message_header')
 
-class Pulse(ForbiddenPlanet):
+        return message
+
+    def message_line(self, message, line_type=None):
+        line_types = {"message_header": "==============================",
+                      "comic_seperator": "----------------------------------"}
+        message.append(line_types[line_type])
+        return message
+
+    def send_notification(self, notification: str, list_title: str = '', notification_type: str = 'watchlist') -> None:
+        msg = self.pulse.po.msg(notification)
+        titles = {'watchlist':f"{list_title.upper()} STOCK CHECK", 'ooslist':"OOS STOCK ALERT", 'livelist': "LIVE TITLE ALERT"}
+        msg.set("title", titles[notification_type])
+        msg.set("html",1)
+        self.pulse.po.send(msg)
+
+class Pulse:
     
     def __init__(self, **kwargs):
     
