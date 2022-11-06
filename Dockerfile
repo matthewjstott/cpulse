@@ -7,4 +7,10 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-CMD [ "python3", "main.py"]
+
+RUN apt-get update -y
+RUN apt-get install cron -y
+RUN crontab mycron
+
+# Executing mycron command
+CMD ["cron", "-f"]
