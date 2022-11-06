@@ -13,4 +13,4 @@ RUN apt-get install cron -y
 RUN crontab mycron
 
 # Executing mycron command
-CMD ["crontab", "-f"]
+CMD ["crond", "-f"]
