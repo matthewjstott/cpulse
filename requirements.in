@@ -4,3 +4,4 @@ git+https://github.com/Wyattjoh/pushover
 python-dotenv
 requests
 validators
+schedule
