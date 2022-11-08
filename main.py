@@ -1,5 +1,7 @@
 from comics import ForbiddenPlanet
+from schedule import every, repeat, run_pending
 
+@repeat(every(1).minutes)
 def main(mode='watchlist'):
 
     if mode == 'stock_update':
