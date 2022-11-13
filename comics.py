@@ -104,7 +104,7 @@ class ForbiddenPlanet:
         return loaded_list
 
 
-    def format_watchlist_notification(self, comics: dict) -> str:
+    def format_watchlist_notification(self) -> str:
 
         self.db.cur.execute("""SELECT series, name, issue, cover, url FROM fp_watchlist WHERE status=TRUE;""")
         watchlist_comics = self.db.cur.fetchall()
@@ -128,8 +128,8 @@ class ForbiddenPlanet:
         return message
 
     def run_watchlist_notification(self, specific_list=None):
-        comics = util.load_json_file(list_type='watchlist')
-        notification = self.format_watchlist_notification(comics)
+
+        notification = self.format_watchlist_notification()
 
         if specific_list:
             self.send_notification(notification, list_title=specific_list, notification_type='watchlist')
@@ -137,29 +137,30 @@ class ForbiddenPlanet:
             self.send_notification(notification, list_title='Total Watch', notification_type='watchlist')
 
 
-    def format_stock_notification(self, comics: dict) -> str:
+    def format_stock_notification(self) -> str:
+
+        self.db.cur.execute("""SELECT series, name, issue, cover, url FROM fp_stocklist WHERE status=TRUE;""")
+        watchlist_comics = self.db.cur.fetchall()
+        comic_names = [' '.join([str(value) for value in comic[:4] if value]) for comic in watchlist_comics]
+        comic_urls = [value[-1] for value in watchlist_comics]
 
         message = self.initiate_message()
 
-        for comic_dict in list(comics.values()):
-            for comic_title in comic_dict.items():
-
-                stock = self.get_stock_count(comic_title[-1])
-                tiny_url = self.make_tiny(comic_title[-1])
-                if stock > 0:
-                    message.append(
-                        f"<font color='orange'>{comic_title[0]}</font> \n Looks to be back <font color='green'>IN</font> stock! :) with a Qty: <b>{stock}</b> \n <a href='{tiny_url}'>Buy now!</a>")
-                    self.message_line(message, line_type='comic_seperator')
-                else:
-                    continue
+        for entry in range(len(watchlist_comics)):
+            stock = self.get_stock_count(comic_urls[entry])
+            tiny_url = util.make_tiny(comic_urls[entry])
+            if stock > 0:
+                message.append(
+                    f"<font color='orange'>{comic_names[entry]}</font> \n Looks to be back <font color='green'>IN</font> stock! :) with a Qty: <b>{stock}</b> \n <a href='{tiny_url}'>Buy now!</a>")
+                self.message_line(message, line_type='comic_seperator')
+            else:
+                continue
 
         message = '\n'.join(message)
         return message
 
     def run_stocklist_notification(self, specific_list=None):
-        comics = util.load_json_file(list_type='stocklist')
-        notification = self.format_oos_notification(comics)
-
+        notification = self.format_stock_notification()
         if specific_list:
             self.send_notification(notification, list_title=specific_list, notification_type='ooslist')
         else:
